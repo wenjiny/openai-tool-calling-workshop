@@ -21,4 +21,4 @@ if __name__ == "__main__":
     load_dotenv()
     if not os.getenv("OPENAI_API_KEY"):
         print("[red]Missing OPENAI_API_KEY. Create a .env from .env.example[/red]")
-    app()
+    app() 

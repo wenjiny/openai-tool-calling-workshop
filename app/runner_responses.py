@@ -73,4 +73,4 @@ def run_once(prompt: str, model: str = "gpt-4.1-mini") -> None:
             parallel_tool_calls=False,
         )
         if getattr(resp2, "output_text", None):
-            console.print(f"[bold cyan]Assistant:[/bold cyan] {resp2.output_text}")
+            console.print(f"[bold cyan]Assistant:[/bold cyan] {resp2.output_text}") 
