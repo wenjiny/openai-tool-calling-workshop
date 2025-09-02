@@ -1,0 +1,18 @@
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "CurrencyAnswer",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "ok": { "type": "boolean" },
+        "base": { "type": "string" },
+        "quote": { "type": "string" },
+        "rate": { "type": "number" },
+        "explanation": { "type": "string" }
+      },
+      "required": ["ok", "base", "quote", "rate"]
+    },
+    "strict": true
+  }
+}

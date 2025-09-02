@@ -1,31 +1,85 @@
+# app/runner_responses.py
 import json
+from pathlib import Path
+from typing import Optional
+
 from openai import OpenAI
 from dotenv import load_dotenv
 from rich.console import Console
+
 from .tools import TOOL_SPECS_RESPONSES, FUNCTIONS
+
+# Optional: if you implemented session persistence (from prior messages)
+try:
+    from .session_store import load_session, save_session
+    HAS_SESSIONS = True
+except Exception:
+    HAS_SESSIONS = False
 
 console = Console()
 
-def run_once(prompt: str, model: str = "gpt-4.1-mini") -> None:
+SCHEMAS_DIR = Path(__file__).resolve().parent / "schemas"
+
+SCHEMA_MAP = {
+    "currency": SCHEMAS_DIR / "currency_answer.json",
+    "time": SCHEMAS_DIR / "time_answer.json",
+}
+
+def _load_response_format(kind: Optional[str]) -> Optional[dict]:
+    """
+    kind: None | 'currency' | 'time'
+    Returns a dict suitable for Responses 'response_format' or None.
+    """
+    if not kind:
+        return None
+    p = SCHEMA_MAP.get(kind.lower())
+    if not p or not p.exists():
+        console.print(f"[red]Structured format '{kind}' not found at {p}[/red]")
+        return None
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:
+        console.print(f"[red]Failed to load schema {p}: {e!r}[/red]")
+        return None
+
+
+def run_once(
+    prompt: str,
+    model: str = "gpt-4.1-mini",
+    session: Optional[str] = None,
+    structured: Optional[str] = None,   # ← 'currency' | 'time' | None
+) -> None:
     load_dotenv()
     client = OpenAI()
 
-    # 1) Start the conversation with a normal user message
-    input_messages = [{"role": "user", "content": prompt}]
+    # Load prior conversation if sessions are enabled
+    if session and HAS_SESSIONS:
+        input_messages = load_session(session)
+    else:
+        input_messages = []
 
+    # 1) Start with user message
+    input_messages.append({"role": "user", "content": prompt})
+
+    response_format = _load_response_format(structured)
+
+    # First pass: let the model decide whether to call tools
     resp = client.responses.create(
         model=model,
         input=input_messages,
         tools=TOOL_SPECS_RESPONSES,
         tool_choice="auto",
         parallel_tool_calls=False,  # keep it simple for the workshop
+        response_format=response_format,  # apply structured output if requested
     )
 
-    # If the model already answered, print it
+    # If the model already answered in text, print & persist (if sessions)
     if getattr(resp, "output_text", None):
         console.print(f"[bold cyan]Assistant:[/bold cyan] {resp.output_text}")
+        if session and HAS_SESSIONS:
+            input_messages.append({"role": "assistant", "content": resp.output_text})
 
-    # 2) Execute any tool calls and append BOTH the call and its output as new inputs
+    # 2) Execute tool calls and append BOTH the call and its output
     had_tools = False
     for item in resp.output or []:
         if getattr(item, "type", "") == "function_call":
@@ -33,12 +87,16 @@ def run_once(prompt: str, model: str = "gpt-4.1-mini") -> None:
             name = getattr(item, "name", None)
             call_id = getattr(item, "call_id", None)
             args_raw = getattr(item, "arguments", "{}")
+
             try:
                 args = json.loads(args_raw) if isinstance(args_raw, str) else (args_raw or {})
             except Exception:
                 args = {}
 
-            console.print(f"[yellow]→ Tool call[/yellow] [bold]{name}[/bold] args={args}")
+            console.print(
+                f"[yellow]→ Tool call[/yellow] [bold]{name}[/bold] "
+                f"[dim]id={call_id}[/dim] args={args}"
+            )
 
             fn = FUNCTIONS.get(name)
             if not fn:
@@ -49,21 +107,24 @@ def run_once(prompt: str, model: str = "gpt-4.1-mini") -> None:
                 except Exception as e:
                     result = {"ok": False, "error": f"{e!r}"}
 
-            # Append the function_call the model made (echo it back)
+            # Echo the function call back to the model
             input_messages.append({
                 "type": "function_call",
                 "name": name,
                 "call_id": call_id,
                 "arguments": json.dumps(args, ensure_ascii=False)
             })
-            # Append your tool result tied to the same call_id
+            console.print(f"[green]✔ Echoed function_call[/green] id={call_id}")
+
+            # Attach the tool result for the same call_id
             input_messages.append({
                 "type": "function_call_output",
                 "call_id": call_id,
                 "output": json.dumps(result, ensure_ascii=False)
             })
+            console.print(f"[green]✔ Attached function_call_output[/green] id={call_id}")
 
-    # 3) Ask the model to produce the final answer with the tool outputs in context
+    # 3) Ask the model for the final answer (now with tool outputs in context)
     if had_tools:
         resp2 = client.responses.create(
             model=model,
@@ -71,6 +132,13 @@ def run_once(prompt: str, model: str = "gpt-4.1-mini") -> None:
             tools=TOOL_SPECS_RESPONSES,
             tool_choice="auto",
             parallel_tool_calls=False,
+            response_format=response_format,  # apply structured output if requested
         )
         if getattr(resp2, "output_text", None):
-            console.print(f"[bold cyan]Assistant:[/bold cyan] {resp2.output_text}") 
+            console.print(f"[bold cyan]Assistant:[/bold cyan] {resp2.output_text}")
+            if session and HAS_SESSIONS:
+                input_messages.append({"role": "assistant", "content": resp2.output_text})
+
+    # Save session (if enabled)
+    if session and HAS_SESSIONS:
+        save_session(session, input_messages)
