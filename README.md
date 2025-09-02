@@ -373,21 +373,4 @@ There are higher-level **agent** frameworks, e.g., **Google’s Agent Developmen
 
 ---
 
-# Troubleshooting
-
-* **“Unexpected extra argument …”**
-  Use the `run` subcommand:
-
-  ```bash
-  python -m app.main run "Your prompt here"
-  ```
-* **Model didn’t call my tool**
-  Nudge it in the prompt: *“Please call `get_time`.”*
-* **Real API failures**
-  Tools return `{"ok": False, "error": "..."}`; the assistant will explain the issue.
-* **No persistent context**
-  Add `--session=NAME` to keep history across runs.
-
----
-
 Happy building! 🎉
