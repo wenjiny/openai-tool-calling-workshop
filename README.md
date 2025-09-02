@@ -99,13 +99,6 @@ The **final assistant message** is normal text for humans. Your **tool outputs a
 **Structured Output**
 With the **Responses API**, you provide a schema via **`text: { format: { type: "json_schema", ... } }`**. This makes the **final assistant message** a **strict JSON** object that **matches your schema** (e.g., `schemas/currency_answer.json`). Great for dashboards, parsing, and automation.
 
-**Important Structured Output rules (Responses API):**
-
-* Put the schema under **`text.format`**, not `response_format`.
-* **All properties must appear in `required`.**
-  To make a property “optional,” set its type to a nullable union (e.g., `["string","null"]`) and still include it in `required`.
-* Add `"additionalProperties": false` to keep outputs tidy.
-
 ---
 
 # Session store — how it works
