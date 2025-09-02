@@ -1,18 +1,17 @@
 {
   "type": "json_schema",
-  "json_schema": {
-    "name": "TimeAnswer",
-    "schema": {
-      "type": "object",
-      "properties": {
-        "ok": { "type": "boolean" },
-        "timezone": { "type": "string" },
-        "datetime": { "type": "string" },
-        "utc_offset": { "type": "string" },
-        "note": { "type": "string" }
-      },
-      "required": ["ok", "timezone", "datetime"]
+  "name": "TimeAnswer",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "ok": { "type": "boolean" },
+      "timezone": { "type": "string" },
+      "datetime": { "type": "string", "format": "date-time" },
+      "utc_offset": { "type": ["string", "null"] },
+      "note": { "type": ["string", "null"] }
     },
-    "strict": true
-  }
+    "required": ["ok", "timezone", "datetime", "utc_offset", "note"],
+    "additionalProperties": false
+  },
+  "strict": true
 }

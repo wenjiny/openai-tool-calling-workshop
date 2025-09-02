@@ -6,8 +6,8 @@ This hands-on workshop walks you through the **OpenAI Responses API + function (
 
 1. **Call a basic function with mock data** (so you can see the model actually invoking your code).
 2. **Call the same kind of function with/without Structured Output** (human text vs strict JSON).
-3. **Call a function that uses a real HTTP API**, again with/without Structured Output.
-4. (Optional) **Write your own function** and add it to the tool space (mock or real API).
+3. **Call a function that uses a real HTTP API (timeapi.io)**, again with/without Structured Output.
+4. *(Optional)* **Write your own function** and add it to the tool space (mock or real API).
 
 ---
 
@@ -34,21 +34,21 @@ This hands-on workshop walks you through the **OpenAI Responses API + function (
 pip install -r requirements.txt
 ```
 
-3. **Set your API key**
-   Create a `.env` file:
+3. **Set your API key** — create a `.env` file:
 
 ```
 OPENAI_API_KEY=sk-...
 ```
 
-4. **Run**
+4. **Run** (note: **no** `run` subcommand)
 
 ```bash
-python -m app.main run "What's the weather in Stockholm in celsius?"
+python -m app.main "What's the weather in Stockholm in celsius?"
 ```
 
-> Tip: You can persist a conversation across runs with `--session=NAME`.
-> You can turn on Structured Output with `--structured=currency` or `--structured=time`.
+> Tips
+> • Persist a conversation across runs with `--session=NAME`.
+> • Turn on **Structured Output** with `--structured=currency` or `--structured=time`.
 
 ---
 
@@ -58,16 +58,16 @@ python -m app.main run "What's the weather in Stockholm in celsius?"
 .venv/
 app/
 ├─ main.py                # CLI entrypoint (Typer). Adds --session and --structured flags.
-├─ runner_responses.py    # Orchestrates the Responses API + function calling handshake.
+├─ runner_responses.py    # Orchestrates the Responses API + function-calling handshake.
 ├─ session_store.py       # Simple JSON disk store for multi-turn sessions across CLI runs.
 └─ tools/
    ├─ __init__.py         # Tool registry: tool schemas for Responses + dispatcher (name → function).
-   ├─ weather.py          # Tool 1: get_weather (mock DB). Good for a quick, offline demo.
-   ├─ currency.py         # Tool 2: get_currency_rate (mock FX DB). Shows a 2nd mock tool.
-   └─ time_api.py         # Tool 3: get_time (real HTTP API via worldtimeapi.org).
+   ├─ weather.py          # Tool 1: get_weather (mock DB). Quick, offline demo.
+   ├─ currency.py         # Tool 2: get_currency_rate (mock FX DB).
+   └─ time_api.py         # Tool 3: get_time (real HTTP API via timeapi.io).
 └─ schemas/
-   ├─ currency_answer.json # Structured Output schema for the final assistant answer to FX questions.
-   └─ time_answer.json     # Structured Output schema for the final assistant answer to time questions.
+   ├─ currency_answer.json # Structured Output schema for final currency answers (text.format).
+   └─ time_answer.json     # Structured Output schema for final time answers (text.format).
 .env
 .gitignore
 README.md
@@ -80,10 +80,10 @@ requirements.txt
 
 1. You send your **prompt** + your **tool schemas** to the **Responses API**.
 2. The model may return one or more **`function_call`** items with `name`, `call_id`, and `arguments`.
-3. Your runner:
+3. The runner:
 
-   * **Executes** the Python function by **name** (using a dispatcher dict).
-   * **Appends two inputs** to the conversation:
+   * **Executes** the Python function by **name** (via a dispatcher dict).
+   * **Appends two inputs**:
 
      * the **echo** of the `function_call`
      * the **`function_call_output`** with your tool’s JSON result (same `call_id`)
@@ -95,14 +95,18 @@ requirements.txt
 
 # Structured Output vs Freeform
 
-* **Freeform (default)**
-  The **final assistant message** is normal text for humans. Your **tool outputs are still JSON** (because you return dicts from Python), but the *assistant’s* last message is prose.
+**Freeform (default)**
+The **final assistant message** is normal text for humans. Your **tool outputs are still JSON** (because your Python functions return dicts), but the *assistant’s* last message is prose.
 
-* **Structured Output**
-  You ask the model to make the **final assistant message** a **strict JSON** object that **validates** against a schema you provide (e.g., `schemas/currency_answer.json`).
-  Great for downstream parsing, dashboards, and automation.
+**Structured Output**
+With the **Responses API**, you provide a schema via **`text: { format: { type: "json_schema", ... } }`**. This makes the **final assistant message** a **strict JSON** object that **matches your schema** (e.g., `schemas/currency_answer.json`). Great for dashboards, parsing, and automation.
 
-> Note: Structured Output affects the **final assistant reply**, not your tool return values.
+**Important Structured Output rules (Responses API):**
+
+* Put the schema under **`text.format`**, not `response_format`.
+* **All properties must appear in `required`.**
+  To make a property “optional,” set its type to a nullable union (e.g., `["string","null"]`) and still include it in `required`.
+* Add `"additionalProperties": false` to keep outputs tidy.
 
 ---
 
@@ -119,10 +123,10 @@ Usage examples:
 
 ```bash
 # Starts a new session called 'demo' (creates file on first run)
-python -m app.main run "Hello!" --session=demo
+python -m app.main "Hello!" --session=demo
 
 # Continues the same conversation later
-python -m app.main run "Follow-up using context..." --session=demo
+python -m app.main "Follow-up using context..." --session=demo
 ```
 
 To reset, delete `.sessions/demo.json`.
@@ -133,8 +137,8 @@ To reset, delete `.sessions/demo.json`.
 
 ### `app/main.py`
 
-* Typer CLI entrypoint.
-* Command: `run`
+* Typer CLI entrypoint (no subcommand).
+* Args:
 
   * `prompt` (positional)
   * `--session / -s` (optional): persist conversation
@@ -145,14 +149,14 @@ To reset, delete `.sessions/demo.json`.
 
 * Implements the **Responses** handshake:
 
-  * First call to `responses.create(...)` with `tools=...`
+  * First call to `client.responses.create(...)` with your `tools=...`
   * If the model produces `function_call` items:
 
     * run the Python function
     * append `function_call` (echo) **and** `function_call_output` (your JSON)
-  * Second call to `responses.create(...)` to synthesize the **final answer**
-* Applies **Structured Output** when `--structured` is set (loads schema JSON from `app/schemas/`).
-* Prints assistant text and simple tool-call logs (name, args, call\_id).
+  * Second call to `client.responses.create(...)` to synthesize the **final answer**
+* Applies **Structured Output** when `--structured` is set (loads schema JSON from `app/schemas/` and passes it via `text={"format": ...}`).
+* Prints assistant text and useful tool-call logs (name, args, `call_id`).
 
 ### `app/session_store.py`
 
@@ -166,7 +170,7 @@ To reset, delete `.sessions/demo.json`.
 
 * Central **tool registry** for the Responses API:
 
-  * `TOOL_SPECS_RESPONSES`: flattened schemas (Responses expects `{type:"function", name, parameters, ...}`).
+  * `TOOL_SPECS_RESPONSES`: flattened tool schemas for Responses (`{"type":"function", **schema}`).
   * `FUNCTIONS`: dispatcher dict mapping tool name → Python function.
 
 ### `app/tools/weather.py`
@@ -181,25 +185,30 @@ To reset, delete `.sessions/demo.json`.
 
 ### `app/tools/time_api.py`
 
-* `get_time(timezone)` queries the **WorldTimeAPI** (real HTTP).
+* `get_time(timezone)` queries **timeapi.io** (real HTTP).
 * `GET_TIME_SCHEMA`: JSON Schema for `timezone`.
-* Requires `requests` in `requirements.txt`.
+* Optionally computes a local `utc_offset` using `zoneinfo` (install `tzdata` on Windows if needed).
 
 ### `app/schemas/*.json`
 
-* **currency\_answer.json** / **time\_answer.json** define a **Structured Output** schema for the **final assistant message** when answering currency/time questions.
-* Flip on with `--structured=currency` or `--structured=time`.
+* **currency\_answer.json** / **time\_answer.json** define a **Structured Output** schema for the **final assistant message** when answering currency/time questions (used via `text.format`).
+* We fixed them to comply with Structured Outputs requirements:
+
+  * **All properties are listed in `required`**
+  * “Optional” props use **nullable** types (e.g., `["string","null"]`)
+  * `"additionalProperties": false`
 
 ---
 
 # Try it — Commands
 
 > You can add `--session=NAME` to any of these to keep the conversation history.
+> Default model is `gpt-4o-mini` (settable via `--model`).
 
 ### 1) Mock weather (freeform)
 
 ```bash
-python -m app.main run "What's the weather in Stockholm in celsius?"
+python -m app.main "What's the weather in Stockholm in celsius?"
 ```
 
 ### 2) Mock currency — freeform vs Structured Output
@@ -207,25 +216,25 @@ python -m app.main run "What's the weather in Stockholm in celsius?"
 * **Freeform**
 
   ```bash
-  python -m app.main run "What's the mock FX rate from SEK to EUR? Please call get_currency_rate."
+  python -m app.main "What's the mock FX rate from SEK to EUR? Please call get_currency_rate."
   ```
 * **Structured Output**
 
   ```bash
-  python -m app.main run "What's the mock FX rate from SEK to EUR? Please call get_currency_rate." --structured=currency
+  python -m app.main "What's the mock FX rate from SEK to EUR? Please call get_currency_rate." --structured=currency
   ```
 
-### 3) Real API time — freeform vs Structured Output
+### 3) Real API time (timeapi.io) — freeform vs Structured Output
 
 * **Freeform**
 
   ```bash
-  python -m app.main run "What is the current time in Europe/Stockholm? Please call get_time."
+  python -m app.main "What is the current time in Europe/Stockholm? Please call get_time."
   ```
 * **Structured Output**
 
   ```bash
-  python -m app.main run "What is the current time in Europe/Stockholm? Please call get_time." --structured=time
+  python -m app.main "What is the current time in Europe/Stockholm? Please call get_time." --structured=time
   ```
 
 ---
@@ -317,23 +326,22 @@ FUNCTIONS.update({
 
 ## C) (Optional) Add Structured Output schema
 
-Create `app/schemas/hello_answer.json`:
+Create `app/schemas/hello_answer.json` (shape matches `text.format`):
 
 ```json
 {
   "type": "json_schema",
-  "json_schema": {
-    "name": "HelloAnswer",
-    "schema": {
-      "type": "object",
-      "properties": {
-        "ok": { "type": "boolean" },
-        "message": { "type": "string" }
-      },
-      "required": ["ok", "message"]
+  "name": "HelloAnswer",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "ok": { "type": "boolean" },
+      "message": { "type": "string" }
     },
-    "strict": true
-  }
+    "required": ["ok", "message"],
+    "additionalProperties": false
+  },
+  "strict": true
 }
 ```
 
@@ -346,7 +354,7 @@ SCHEMA_MAP["hello"] = SCHEMAS_DIR / "hello_answer.json"
 Then:
 
 ```bash
-python -m app.main run "Please call say_hello with name='Wenjin'." --structured=hello
+python -m app.main "Please call say_hello with name='Wenjin'." --structured=hello
 ```
 
 ---
@@ -361,8 +369,8 @@ There are higher-level **agent** frameworks, e.g., **Google’s Agent Developmen
 | Orchestration  | You write the loop (detect `function_call`, run, echo/output) | Built-ins for multi-step flows, handoffs, guardrails                          | Built-ins for multi-agent composition, routing, parallel tasks        |
 | Concurrency    | Manual (you can do it, but you manage it)                     | Patterns for parallel steps and handoffs                                      | First-class parallelism for subtasks                                  |
 | Review/QA      | DIY (validators, retries, structured outputs)                 | Reviewer/guardrail patterns + observability                                   | Reviewer/feedback loops + evaluation tooling                          |
-| Best when      | Simple apps, one agent with a handful of tools                | You need multi-step flows, safety gates, tracing                              | You want a model-agnostic multi-agent system similar to MAS research  |
-| Migration path | Start here (minimal surface)                                  | Add when complexity grows                                                     | Use when you want MAS patterns and Google’s ecosystem                 |
+| Best when      | Simple apps, one agent with a handful of tools                | You need multi-step flows, safety gates, tracing                              | You want a model-agnostic multi-agent system                          |
+| Migration path | Start here (minimal surface)                                  | Add when complexity grows                                                     | Use when you want MAS patterns & Google ecosystem                     |
 
 **Rule of thumb**
 

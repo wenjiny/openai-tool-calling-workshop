@@ -10,7 +10,7 @@ app = typer.Typer(help="OpenAI function/tool-calling workshop (Responses API onl
 @app.command(name="run")
 def run(
     prompt: str,
-    model: str = typer.Option("gpt-4.1-mini", help="Responses model to use."),
+    model: str = typer.Option("gpt-4o-mini", help="Responses model to use."),
     session: Optional[str] = typer.Option(
         None, "--session", "-s", help="Session name to persist conversation history."
     ),

@@ -1,0 +1,48 @@
+[
+  {
+    "role": "user",
+    "content": "What's the mock FX rate from SEK to EUR?"
+  },
+  {
+    "type": "function_call",
+    "name": "get_currency_rate",
+    "call_id": "call_jIC2cUQ0HjhaN8Sbk6vTCtTz",
+    "arguments": "{\"base\": \"SEK\", \"quote\": \"EUR\"}"
+  },
+  {
+    "type": "function_call_output",
+    "call_id": "call_jIC2cUQ0HjhaN8Sbk6vTCtTz",
+    "output": "{\"ok\": true, \"base\": \"SEK\", \"quote\": \"EUR\", \"rate\": 0.09}"
+  },
+  {
+    "role": "assistant",
+    "content": "The mock exchange rate from Swedish Krona (SEK) to Euro (EUR) is 0.09. This means 1 SEK is equivalent to 0.09 EUR in this mock data."
+  },
+  {
+    "role": "user",
+    "content": "can you tell me again what's the \nmock FX rate from SEK to EUR?"
+  },
+  {
+    "role": "assistant",
+    "content": "The mock FX rate from Swedish Krona (SEK) to Euro (EUR) is 0.09."
+  },
+  {
+    "role": "user",
+    "content": "What is the current time in Europe/Stockholm? Please call get_time."
+  },
+  {
+    "type": "function_call",
+    "name": "get_time",
+    "call_id": "call_DJGnIdZRoO7LuzfuMmqtwyf5",
+    "arguments": "{\"timezone\": \"Europe/Stockholm\"}"
+  },
+  {
+    "type": "function_call_output",
+    "call_id": "call_DJGnIdZRoO7LuzfuMmqtwyf5",
+    "output": "{\"ok\": true, \"timezone\": \"Europe/Stockholm\", \"datetime\": \"2025-09-02T15:40:06.095521\", \"day_of_week\": \"Tuesday\", \"dst_active\": true, \"raw\": {\"year\": 2025, \"month\": 9, \"day\": 2, \"hour\": 15, \"minute\": 40, \"seconds\": 6, \"milliSeconds\": 95}}"
+  },
+  {
+    "role": "assistant",
+    "content": "The current time in Europe/Stockholm is 15:40 on Tuesday, September 2, 2025."
+  }
+]
