@@ -216,12 +216,12 @@ python -m app.main "What's the weather in Stockholm in celsius?"
 * **Freeform**
 
   ```bash
-  python -m app.main "What's the mock FX rate from SEK to EUR? Please call get_currency_rate."
+  python -m app.main "What's the mock FX rate from SEK to EUR? "
   ```
 * **Structured Output**
 
   ```bash
-  python -m app.main "What's the mock FX rate from SEK to EUR? Please call get_currency_rate." --structured=currency
+  python -m app.main "What's the mock FX rate from SEK to EUR? " --structured=currency
   ```
 
 ### 3) Real API time (timeapi.io) — freeform vs Structured Output
@@ -229,12 +229,12 @@ python -m app.main "What's the weather in Stockholm in celsius?"
 * **Freeform**
 
   ```bash
-  python -m app.main "What is the current time in Europe/Stockholm? Please call get_time."
+  python -m app.main "What is the current time in Europe/Stockholm?"
   ```
 * **Structured Output**
 
   ```bash
-  python -m app.main "What is the current time in Europe/Stockholm? Please call get_time." --structured=time
+  python -m app.main "What is the current time in Europe/Stockholm?" --structured=time
   ```
 
 ---
@@ -354,7 +354,7 @@ SCHEMA_MAP["hello"] = SCHEMAS_DIR / "hello_answer.json"
 Then:
 
 ```bash
-python -m app.main "Please call say_hello with name='Wenjin'." --structured=hello
+python -m app.main "Can you greet a new customer of mine?" --structured=hello
 ```
 
 ---
