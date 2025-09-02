@@ -22,6 +22,7 @@ SCHEMAS_DIR = Path(__file__).resolve().parent / "schemas"
 SCHEMA_MAP = {
     "currency": SCHEMAS_DIR / "currency_answer.json",
     "time": SCHEMAS_DIR / "time_answer.json",
+    #"hello": SCHEMAS_DIR / "hello_answer.json",
 }
 
 def _load_text_format(kind: Optional[str]) -> Optional[dict]:

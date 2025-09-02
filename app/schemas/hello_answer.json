@@ -1,0 +1,14 @@
+{
+  "type": "json_schema",
+  "name": "HelloAnswer",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "ok": { "type": "boolean" },
+      "message": { "type": "string" }
+    },
+    "required": ["ok", "message"],
+    "additionalProperties": false
+  },
+  "strict": true
+}

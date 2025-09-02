@@ -44,5 +44,47 @@
   {
     "role": "assistant",
     "content": "The current time in Europe/Stockholm is 15:40 on Tuesday, September 2, 2025."
+  },
+  {
+    "role": "user",
+    "content": "can you say hello to my friend"
+  },
+  {
+    "role": "assistant",
+    "content": "Sure! What's your friend's name?"
+  },
+  {
+    "role": "user",
+    "content": "her name is Elsa"
+  },
+  {
+    "type": "function_call",
+    "name": "say_hello",
+    "call_id": "call_M1mdk7TdC4zkgvOaxWVYnpzs",
+    "arguments": "{\"name\": \"Elsa\"}"
+  },
+  {
+    "type": "function_call_output",
+    "call_id": "call_M1mdk7TdC4zkgvOaxWVYnpzs",
+    "output": "{\"ok\": true, \"message\": \"Hello, Elsa!\"}"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello, Elsa!"
+  },
+  {
+    "role": "user",
+    "content": "What is the current time in Europe/Stockholm?"
+  },
+  {
+    "type": "function_call",
+    "name": "get_time",
+    "call_id": "call_nG7pEJYsJEUpe4qfIgxZ0JsF",
+    "arguments": "{\"timezone\": \"Europe/Stockholm\"}"
+  },
+  {
+    "type": "function_call_output",
+    "call_id": "call_nG7pEJYsJEUpe4qfIgxZ0JsF",
+    "output": "{\"ok\": false, \"timezone\": \"Europe/Stockholm\", \"error\": \"Network error: HTTPSConnectionPool(host='www.timeapi.io', port=443): Read timed out. (read timeout=10)\"}"
   }
 ]

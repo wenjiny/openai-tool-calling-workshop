@@ -1,3 +1,4 @@
+
 # Function Calling Workshop (Responses API Only)
 
 This hands-on workshop walks you through the **OpenAI Responses API + function (tool) calling**. You’ll learn how to wire up Python functions as tools, how the model calls them with validated JSON, and how to optionally force the assistant’s **final answer** to be **Structured Output** (strict JSON), perfect for automation.
@@ -200,6 +201,50 @@ To reset, delete `.sessions/demo.json`.
 
 ---
 
+# Discover and probe the tools (interactive exercises)
+
+### 1) Ask what tools exist
+
+Let the model enumerate its available functions from the registry:
+
+```bash
+python -m app.main "What functions are you able to call?"
+```
+
+You should see the names and short descriptions (e.g., `get_weather`, `get_currency_rate`, `get_time`, and any others you’ve added like `say_hello` or `get_ip_geo`).
+
+### 2) Try **missing-argument** prompts to see clarifying questions
+
+The schemas mark required properties, so the model should ask you for what’s missing instead of guessing.
+
+* **Weather** — omit city:
+
+  ```bash
+  python -m app.main "What's the weather right now?"
+  ```
+
+  Expect: assistant asks for the **city** (and may assume Celsius or ask).
+
+* **Currency** — omit one code:
+
+  ```bash
+  python -m app.main "Convert SEK to what? I only know SEK."
+  ```
+
+  Expect: assistant asks for the **quote** currency (e.g., EUR or USD).
+
+* **Time** — give a city, not an IANA timezone:
+
+  ```bash
+  python -m app.main "What's the current time in Stockholm?"
+  ```
+
+  Expect: assistant asks for the **IANA timezone** (e.g., `Europe/Stockholm`).
+
+> Tip: You can keep the thread going with `--session=demo` so the clarifying Q/A leads into an actual tool call.
+
+---
+
 # Try it — Commands
 
 > You can add `--session=NAME` to any of these to keep the conversation history.
@@ -216,12 +261,12 @@ python -m app.main "What's the weather in Stockholm in celsius?"
 * **Freeform**
 
   ```bash
-  python -m app.main "What's the mock FX rate from SEK to EUR? "
+  python -m app.main "What's the mock FX rate from SEK to EUR?"
   ```
 * **Structured Output**
 
   ```bash
-  python -m app.main "What's the mock FX rate from SEK to EUR? " --structured=currency
+  python -m app.main "What's the mock FX rate from SEK to EUR?" --structured=currency
   ```
 
 ### 3) Real API time (timeapi.io) — freeform vs Structured Output
@@ -236,8 +281,6 @@ python -m app.main "What's the weather in Stockholm in celsius?"
   ```bash
   python -m app.main "What is the current time in Europe/Stockholm?" --structured=time
   ```
-
----
 
 # Add your own function (tool)
 
@@ -354,8 +397,17 @@ SCHEMA_MAP["hello"] = SCHEMAS_DIR / "hello_answer.json"
 Then:
 
 ```bash
-python -m app.main "Can you greet a new customer of mine?" --structured=hello
+python -m app.main "Can you say hello to my friend?" --structured=hello
 ```
+or
+
+```bash
+python -m app.main "Please look up the IP geolocation for 8.8.8.8?"
+```
+
+Expect a JSON-like result from the tool (country, city, lat/lon). You can create a Structured Output schema later if you want strict JSON for the final answer.
+
+---
 
 ---
 
