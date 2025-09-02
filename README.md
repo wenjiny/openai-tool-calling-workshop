@@ -14,19 +14,16 @@ This hands-on workshop walks you through the **OpenAI Responses API + function (
 
 # Get started
 
-1. **Activate your virtualenv**
+1. **Activate your virtualenv if not already activated**
 
-* macOS/Linux:
-
-  ```bash
-  python -m venv .venv
-  source .venv/bin/activate
-  ```
 * Windows (PowerShell):
 
   ```powershell
-  python -m venv .venv
-  .\.venv\Scripts\Activate
+  # Only for this PowerShell session
+  Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+
+  # now activate
+  .\.venv\Scripts\Activate.ps1
   ```
 
 2. **Install deps**
