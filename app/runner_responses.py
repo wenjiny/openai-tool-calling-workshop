@@ -105,10 +105,10 @@ def run_once(
             except Exception:
                 args = {}
 
-            console.print(
+            """console.print(
                 f"[yellow]→ Tool call[/yellow] [bold]{name}[/bold] "
                 f"[dim]id={call_id}[/dim] args={args}"
-            )
+            )"""
 
             fn = FUNCTIONS.get(name)
             if not fn:
@@ -126,7 +126,7 @@ def run_once(
                 "call_id": call_id,
                 "arguments": json.dumps(args, ensure_ascii=False)
             })
-            console.print(f"[green]✔ Echoed function_call[/green] id={call_id}")
+            #console.print(f"[green]✔ Echoed function_call[/green] id={call_id}")
 
             # Attach the tool result tied to the same call_id
             input_messages.append({
@@ -134,7 +134,7 @@ def run_once(
                 "call_id": call_id,
                 "output": json.dumps(result, ensure_ascii=False)
             })
-            console.print(f"[green]✔ Attached function_call_output[/green] id={call_id}")
+            #console.print(f"[green]✔ Attached function_call_output[/green] id={call_id}")
 
     # 3) Ask the model to produce the final answer with the tool outputs in context
     if had_tools:

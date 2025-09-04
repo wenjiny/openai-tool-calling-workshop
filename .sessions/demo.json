@@ -86,5 +86,32 @@
     "type": "function_call_output",
     "call_id": "call_nG7pEJYsJEUpe4qfIgxZ0JsF",
     "output": "{\"ok\": false, \"timezone\": \"Europe/Stockholm\", \"error\": \"Network error: HTTPSConnectionPool(host='www.timeapi.io', port=443): Read timed out. (read timeout=10)\"}"
+  },
+  {
+    "role": "user",
+    "content": "What's the weather in Stockholm in celsius?"
+  },
+  {
+    "type": "function_call",
+    "name": "get_weather",
+    "call_id": "call_RZvVE5RViWJjxuhA28moR7WO",
+    "arguments": "{\"city\": \"Stockholm\", \"unit\": \"c\"}"
+  },
+  {
+    "type": "function_call_output",
+    "call_id": "call_RZvVE5RViWJjxuhA28moR7WO",
+    "output": "{\"ok\": true, \"city\": \"Stockholm\", \"unit\": \"c\", \"temperature\": 18.0}"
+  },
+  {
+    "role": "assistant",
+    "content": "The current temperature in Stockholm is 18.0°C."
+  },
+  {
+    "role": "user",
+    "content": "What's the weather in Stockholm in celsius?"
+  },
+  {
+    "role": "assistant",
+    "content": "The current temperature in Stockholm is 18.0°C."
   }
 ]

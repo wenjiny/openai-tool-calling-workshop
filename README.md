@@ -1,5 +1,5 @@
 
-# Function Calling Workshop (Responses API Only)
+# Function Calling Workshop
 
 This hands-on workshop walks you through the **OpenAI Responses API + function (tool) calling**. You’ll learn how to wire up Python functions as tools, how the model calls them with validated JSON, and how to optionally force the assistant’s **final answer** to be **Structured Output** (strict JSON), perfect for automation.
 
